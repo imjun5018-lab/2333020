@@ -1,0 +1,8 @@
+project_id = "yatqauonguxjrprcsfyx"
+
+[functions.tarot-generate]
+verify_jwt = false
+
+[functions.fortune-generate]
+verify_jwt = false
+

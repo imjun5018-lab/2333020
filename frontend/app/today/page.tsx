@@ -6,6 +6,8 @@ import { useMemo, useState } from "react";
 type Tab = "cookie" | "animal" | "star";
 
 const animalByRemainder = ["원숭이", "닭", "개", "돼지", "쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양"];
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://yatqauonguxjrprcsfyx.supabase.co";
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 const starSigns = [
   { name: "염소자리", from: [12, 22], to: [1, 19] },
@@ -55,9 +57,17 @@ export default function TodayPage() {
     setError("");
     setResult(null);
     try {
-      const response = await fetch("http://127.0.0.1:4000/api/fortune/generate", {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json"
+      };
+      if (supabaseKey) {
+        headers.apikey = supabaseKey;
+        headers.Authorization = `Bearer ${supabaseKey}`;
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/fortune-generate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           category,
           profile: {

@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { positionLabels, tarotById, type TarotCard } from "../../../lib/tarot";
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://yatqauonguxjrprcsfyx.supabase.co";
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+
 export default function TarotRevealClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,12 +28,17 @@ export default function TarotRevealClient() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("http://127.0.0.1:4000/api/tarot/generate", {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json"
+      };
+      if (supabaseKey) {
+        headers.apikey = supabaseKey;
+        headers.Authorization = `Bearer ${supabaseKey}`;
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/tarot-generate`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-paid-user": "false"
-        },
+        headers,
         body: JSON.stringify({ readingType: type, cards })
       });
 
