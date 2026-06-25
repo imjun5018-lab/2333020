@@ -6,3 +6,14 @@ verify_jwt = false
 [functions.fortune-generate]
 verify_jwt = false
 
+[functions.health]
+verify_jwt = false
+
+[functions.readings-test]
+verify_jwt = false
+
+[functions.readings-ai]
+verify_jwt = false
+
+[functions.storage-test-image-record]
+verify_jwt = false

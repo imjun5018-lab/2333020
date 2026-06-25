@@ -21,9 +21,12 @@ const openai = process.env.OPENAI_API_KEY
   : null;
 const openaiModel = process.env.OPENAI_MODEL || "gpt-5.4-mini";
 
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+
 const supabase =
-  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+  process.env.SUPABASE_URL && supabaseKey
+    ? createClient(process.env.SUPABASE_URL, supabaseKey)
     : null;
 
 app.get("/health", (_req, res) => {
