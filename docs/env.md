@@ -46,6 +46,12 @@ Set these function secrets before deployment:
 supabase secrets set OPENAI_API_KEY=... OPENAI_MODEL=gpt-4.1-mini FRONTEND_ORIGIN=http://localhost:3000
 ```
 
+For Vercel, prefer comma-separated `FRONTEND_ORIGINS`:
+
+```bash
+supabase secrets set FRONTEND_ORIGINS=https://your-vercel-domain.vercel.app,http://localhost:3000
+```
+
 If the token is stored in `backend/.env`, load it in PowerShell before running Supabase CLI commands:
 
 ```powershell

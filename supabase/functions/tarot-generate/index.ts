@@ -1,10 +1,24 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": Deno.env.get("FRONTEND_ORIGIN") ?? "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+function corsHeaders(req: Request) {
+  return {
+    "Access-Control-Allow-Origin": getAllowedOrigin(req),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+function getAllowedOrigin(req: Request) {
+  const requestOrigin = req.headers.get("Origin");
+  const configuredOrigins = (Deno.env.get("FRONTEND_ORIGINS") || Deno.env.get("FRONTEND_ORIGIN") || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (configuredOrigins.length === 0 || configuredOrigins.includes("*")) return "*";
+  if (requestOrigin && configuredOrigins.includes(requestOrigin)) return requestOrigin;
+  return configuredOrigins[0];
+}
 
 type TarotCard = {
   name?: string;
@@ -15,11 +29,11 @@ type TarotCard = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST") {
-    return json({ error: "Method not allowed" }, 405);
+    return json(req, { error: "Method not allowed" }, 405);
   }
 
   try {
@@ -31,14 +45,14 @@ Deno.serve(async (req) => {
     };
 
     if (!Array.isArray(cards) || cards.length !== 3) {
-      return json({ error: "cards must contain exactly 3 selected tarot cards" }, 400);
+      return json(req, { error: "cards must contain exactly 3 selected tarot cards" }, 400);
     }
 
     const openaiKey = Deno.env.get("OPENAI_API_KEY");
     const openaiModel = Deno.env.get("OPENAI_MODEL") ?? "gpt-4.1-mini";
 
     if (!openaiKey) {
-      return json({ error: "OPENAI_API_KEY is not configured", model: openaiModel }, 501);
+      return json(req, { error: "OPENAI_API_KEY is not configured", model: openaiModel }, 501);
     }
 
     const prompt = [
@@ -76,7 +90,7 @@ Deno.serve(async (req) => {
 
     if (!response.ok) {
       const detail = await response.text();
-      return json({ error: "OpenAI request failed", detail }, 502);
+      return json(req, { error: "OpenAI request failed", detail }, 502);
     }
 
     const data = await response.json();
@@ -131,14 +145,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    return json({
+    return json(req, {
       result,
       saved,
       record,
       savePolicy: "Only logged-in paid users are saved to Supabase.",
     });
   } catch (error) {
-    return json({ error: "Internal server error", detail: String(error) }, 500);
+    return json(req, { error: "Internal server error", detail: String(error) }, 500);
   }
 });
 
@@ -191,13 +205,12 @@ function getSecretKey() {
   }
 }
 
-function json(data: unknown, status = 200) {
+function json(req: Request, data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
-      ...corsHeaders,
+      ...corsHeaders(req),
       "Content-Type": "application/json",
     },
   });
 }
-

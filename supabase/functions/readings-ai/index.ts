@@ -1,16 +1,30 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": Deno.env.get("FRONTEND_ORIGIN") ?? "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+function corsHeaders(req: Request) {
+  return {
+    "Access-Control-Allow-Origin": getAllowedOrigin(req),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+function getAllowedOrigin(req: Request) {
+  const requestOrigin = req.headers.get("Origin");
+  const configuredOrigins = (Deno.env.get("FRONTEND_ORIGINS") || Deno.env.get("FRONTEND_ORIGIN") || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (configuredOrigins.length === 0 || configuredOrigins.includes("*")) return "*";
+  if (requestOrigin && configuredOrigins.includes(requestOrigin)) return requestOrigin;
+  return configuredOrigins[0];
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST") {
-    return json({ error: "Method not allowed" }, 405);
+    return json(req, { error: "Method not allowed" }, 405);
   }
 
   try {
@@ -18,7 +32,7 @@ Deno.serve(async (req) => {
     const openaiModel = Deno.env.get("OPENAI_MODEL") ?? "gpt-4.1-mini";
 
     if (!openaiKey) {
-      return json({
+      return json(req, {
         error: "OPENAI_API_KEY is not configured",
         fallbackEndpoint: "/functions/v1/readings-test",
       }, 501);
@@ -27,7 +41,7 @@ Deno.serve(async (req) => {
     const { name, birthDate, birthTime, topic } = await req.json().catch(() => ({}));
 
     if (!birthDate) {
-      return json({ error: "birthDate is required" }, 400);
+      return json(req, { error: "birthDate is required" }, 400);
     }
 
     const prompt = [
@@ -53,7 +67,7 @@ Deno.serve(async (req) => {
 
     if (!response.ok) {
       const detail = await response.text();
-      return json({ error: "OpenAI request failed", detail }, 502);
+      return json(req, { error: "OpenAI request failed", detail }, 502);
     }
 
     const data = await response.json();
@@ -64,17 +78,17 @@ Deno.serve(async (req) => {
       )?.text ||
       "";
 
-    return json({ reading });
+    return json(req, { reading });
   } catch (error) {
-    return json({ error: "Internal server error", detail: String(error) }, 500);
+    return json(req, { error: "Internal server error", detail: String(error) }, 500);
   }
 });
 
-function json(data: unknown, status = 200) {
+function json(req: Request, data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
-      ...corsHeaders,
+      ...corsHeaders(req),
       "Content-Type": "application/json",
     },
   });
