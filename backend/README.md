@@ -9,10 +9,10 @@ npm install
 npm run dev
 ```
 
-Default URL:
+Default port:
 
 ```text
-http://127.0.0.1:4000
+4000
 ```
 
 Health check:

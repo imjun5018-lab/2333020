@@ -30,7 +30,7 @@ Do not add `OPENAI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, or `SUPABASE_ACCESS_TO
 Supabase Functions support comma-separated frontend origins through `FRONTEND_ORIGINS`:
 
 ```bash
-supabase secrets set FRONTEND_ORIGINS=https://your-vercel-domain.vercel.app,http://localhost:3000
+supabase secrets set FRONTEND_ORIGINS=https://youngwalldang.store,https://www.youngwalldang.store
 ```
 
 If no origin is configured, the functions allow all origins.

@@ -6,7 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const app = express();
 const port = Number(process.env.PORT || 4000);
-const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://127.0.0.1:3001";
+const frontendOrigin = process.env.FRONTEND_ORIGIN || "https://youngwalldang.store";
 
 app.use(
   cors({
@@ -295,5 +295,5 @@ app.use((err, _req, res, _next) => {
 });
 
 app.listen(port, () => {
-  console.log(`Test backend listening on http://127.0.0.1:${port}`);
+  console.log(`Test backend listening on port ${port}`);
 });
