@@ -4,12 +4,6 @@ import Link from "next/link";
 export default function SajuPage() {
   return (
     <main className="mobile-shell">
-      <header className="app-header">
-        <Link className="app-logo" href="/">
-          <Image src="/media/brand-wolyeondang.png" alt="월연당 로고" width={34} height={34} />
-          <span>월연당</span>
-        </Link>
-      </header>
       <nav className="top-tabs" aria-label="주요 메뉴">
         <Link href="/saju" className="active">정통사주</Link>
         <Link href="/tarot">타로</Link>

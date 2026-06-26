@@ -34,9 +34,7 @@ const sections = [
 ];
 
 export default function Home() {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -47,37 +45,8 @@ export default function Home() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setMenuOpen(false);
-    setNotice("로그아웃되었습니다.");
-  };
-
   return (
     <main className="mobile-shell">
-      <header className="app-header">
-        <Link className="app-logo" href="/">
-          <Image src="/media/brand-wolyeondang.png" alt="월연당 로고" width={34} height={34} />
-          <span>월연당</span>
-        </Link>
-        <div className="header-actions">
-          <button
-            className="icon-button"
-            type="button"
-            aria-label="검색"
-            onClick={() => setNotice("검색은 곧 연결됩니다. 지금은 메뉴에서 운세를 선택해 주세요.")}
-          >
-            ⌕
-          </button>
-          <button className="icon-button" type="button" aria-label="메뉴 열기" onClick={() => setMenuOpen(true)}>
-            <span />
-            <span />
-            <span />
-          </button>
-        </div>
-      </header>
-
       <nav className="top-tabs" aria-label="주요 메뉴">
         <Link href="/saju" className="active">정통사주</Link>
         <Link href="/tarot">타로</Link>
@@ -87,8 +56,6 @@ export default function Home() {
         <strong>오늘은 무엇이 궁금하세요?</strong>
         <p>{user ? `${user.email || "회원"}님, 리딩을 이어갈 수 있습니다.` : "정통사주와 타로만 남겨 더 빠르게 고를 수 있게 정리했습니다."}</p>
       </section>
-
-      {notice && <p className="auth-message">{notice}</p>}
 
       <section className="hero-scroll" aria-label="대표 운세">
         {heroCards.map((card) => (
@@ -150,7 +117,10 @@ export default function Home() {
         </ul>
         <div className="button-row">
           {user ? (
-            <button type="button" onClick={signOut}>로그아웃</button>
+            <>
+              <Link href="/profile">프로필</Link>
+              <Link href="/today">오늘의 운세</Link>
+            </>
           ) : (
             <>
               <Link href="/login">로그인</Link>
@@ -159,27 +129,6 @@ export default function Home() {
           )}
         </div>
       </section>
-
-      {menuOpen && (
-        <div className="menu-backdrop" role="presentation" onClick={() => setMenuOpen(false)}>
-          <aside className="menu-modal" role="dialog" aria-modal="true" aria-label="전체 메뉴" onClick={(event) => event.stopPropagation()}>
-            <div className="menu-head">
-              <strong>월연당 메뉴</strong>
-              <button type="button" onClick={() => setMenuOpen(false)} aria-label="메뉴 닫기">×</button>
-            </div>
-            <Link href="/saju" onClick={() => setMenuOpen(false)}>정통사주 보기</Link>
-            <Link href="/tarot" onClick={() => setMenuOpen(false)}>타로 보기</Link>
-            {user ? (
-              <button type="button" onClick={signOut}>로그아웃</button>
-            ) : (
-              <>
-                <Link href="/login" onClick={() => setMenuOpen(false)}>로그인</Link>
-                <Link href="/signup" onClick={() => setMenuOpen(false)}>회원가입</Link>
-              </>
-            )}
-          </aside>
-        </div>
-      )}
     </main>
   );
 }
