@@ -6,3 +6,4 @@ See:
 
 - `docs/vercel.md`
 - `docs/env.md`
+- `docs/auth.md`

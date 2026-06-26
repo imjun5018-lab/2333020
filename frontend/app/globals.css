@@ -344,6 +344,7 @@ select {
 }
 
 .button-row a,
+.button-row button,
 .primary-button {
   display: grid;
   min-height: 48px;
@@ -353,6 +354,10 @@ select {
   background: var(--red);
   color: #fff;
   font-weight: 900;
+}
+
+.button-row button {
+  cursor: pointer;
 }
 
 .button-row a:nth-child(2) {
@@ -397,10 +402,18 @@ select {
   font-size: 28px;
 }
 
-.menu-modal a {
+.menu-modal a,
+.menu-modal > button {
   display: block;
+  width: 100%;
   border-top: 1px solid var(--line);
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
   padding: 18px 4px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
   font-size: 18px;
   font-weight: 900;
 }

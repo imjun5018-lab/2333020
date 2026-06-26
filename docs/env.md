@@ -66,6 +66,12 @@ Required Supabase configuration:
 - Enable Kakao OAuth provider.
 - Configure Kakao redirect URL for local development and Vercel production.
 
+Kakao callback URL for Kakao Developers:
+
+```text
+https://yatqauonguxjrprcsfyx.supabase.co/auth/v1/callback
+```
+
 ## Supabase Storage
 
 Recommended initial bucket:
