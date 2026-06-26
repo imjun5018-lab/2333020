@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { supabase } from "../../../lib/supabase-client";
+import { ensureProfile, supabase } from "../../../lib/supabase-client";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data, error }) => {
+    supabase.auth.getSession().then(async ({ data, error }) => {
       if (!mounted) return;
 
       if (error) {
@@ -21,6 +21,7 @@ export default function AuthCallbackPage() {
       }
 
       if (data.session) {
+        await ensureProfile();
         router.replace("/");
         router.refresh();
         return;

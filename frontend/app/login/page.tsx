@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authMessage } from "../../lib/auth-messages";
-import { getSiteUrl, supabase } from "../../lib/supabase-client";
+import { ensureProfile, getSiteUrl, supabase } from "../../lib/supabase-client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,6 +30,7 @@ export default function LoginPage() {
     }
 
     setMessage("로그인되었습니다.");
+    await ensureProfile();
     router.push("/");
     router.refresh();
   };
