@@ -12,7 +12,6 @@ export default function AppNavigation() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -49,7 +48,7 @@ export default function AppNavigation() {
             className="icon-button"
             type="button"
             aria-label="검색"
-            onClick={() => setNotice("검색은 곧 연결됩니다. 지금은 메뉴에서 운세를 선택해 주세요.")}
+            onClick={() => router.push("/search")}
           >
             ⌕
           </button>
@@ -61,12 +60,6 @@ export default function AppNavigation() {
         </div>
       </header>
 
-      {notice && (
-        <button className="nav-toast" type="button" onClick={() => setNotice("")}>
-          {notice}
-        </button>
-      )}
-
       {menuOpen && (
         <div className="menu-backdrop" role="presentation" onClick={closeMenu}>
           <aside className="menu-modal" role="dialog" aria-modal="true" aria-label="전체 메뉴" onClick={(event) => event.stopPropagation()}>
@@ -77,9 +70,11 @@ export default function AppNavigation() {
             <Link href="/saju">정통사주 보기</Link>
             <Link href="/tarot">타로 보기</Link>
             <Link href="/today">오늘의 운세</Link>
+            <Link href="/search">검색</Link>
             {user ? (
               <>
                 <Link href="/profile">프로필</Link>
+                <Link href="/admin">관리자</Link>
                 <button type="button" onClick={signOut}>로그아웃</button>
               </>
             ) : (

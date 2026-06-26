@@ -4,10 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { positionLabels, tarotById, type TarotCard } from "../../../lib/tarot";
-import { supabase } from "../../../lib/supabase-client";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://yatqauonguxjrprcsfyx.supabase.co";
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+import { READING_PRICE, requireLogin, startPendingPayment } from "../../../lib/payment";
 
 export default function TarotRevealClient() {
   const router = useRouter();
@@ -29,41 +26,20 @@ export default function TarotRevealClient() {
     setLoading(true);
     setError("");
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json"
-      };
-      if (supabaseKey) {
-        headers.apikey = supabaseKey;
-        headers.Authorization = `Bearer ${supabaseKey}`;
+      const session = await requireLogin();
+      if (!session) {
+        router.push("/login");
+        return;
       }
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
-      if (accessToken) {
-        headers.Authorization = `Bearer ${accessToken}`;
-      }
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/tarot-generate`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ readingType: type, cards, isPaidUser: Boolean(accessToken) })
+      startPendingPayment({
+        kind: "tarot",
+        orderName: "월연당 타로 리딩",
+        amount: READING_PRICE,
+        payload: { type, cards },
       });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "결과 생성에 실패했습니다.");
-      }
-
-      sessionStorage.setItem("tarot-result", JSON.stringify({
-        type,
-        cards,
-        result: data.result,
-        saved: data.saved,
-        record: data.record || null
-      }));
-      router.push("/tarot/result");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "결과 생성에 실패했습니다.");
+      setError(err instanceof Error ? err.message : "결제를 시작하지 못했습니다.");
     } finally {
       setLoading(false);
     }
@@ -107,7 +83,7 @@ export default function TarotRevealClient() {
 
       <section className="result-actions">
         <button className="primary-button" type="button" disabled={!allFlipped || loading} onClick={generateResult}>
-          {loading ? "결과 생성 중..." : "결과 생성하기"}
+          {loading ? "결제 준비 중..." : "결제하고 결과 보기"}
         </button>
         <Link className="primary-button secondary" href="/tarot">다시 선택하기</Link>
       </section>

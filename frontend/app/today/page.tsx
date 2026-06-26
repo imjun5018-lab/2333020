@@ -1,15 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { supabase } from "../../lib/supabase-client";
+import { useEffect, useMemo, useState } from "react";
+import { READING_PRICE, requireLogin, startPendingPayment } from "../../lib/payment";
 
 type Tab = "cookie" | "animal" | "star";
 
 const animalByRemainder = ["원숭이", "닭", "개", "돼지", "쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양"];
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://yatqauonguxjrprcsfyx.supabase.co";
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-
 const starSigns = [
   { name: "염소자리", from: [12, 22], to: [1, 19] },
   { name: "물병자리", from: [1, 20], to: [2, 18] },
@@ -54,47 +51,49 @@ export default function TodayPage() {
   const animal = useMemo(() => birthDate ? getAnimal(Number(birthDate.slice(0, 4))) : "", [birthDate]);
   const star = useMemo(() => birthDate ? getStarSign(birthDate) : "", [birthDate]);
 
+  useEffect(() => {
+    const raw = sessionStorage.getItem("fortune-result");
+    if (!raw) return;
+
+    const stored = JSON.parse(raw);
+    setTab(stored.category || "cookie");
+    setName(stored.profile?.name || "");
+    setBirthDate(stored.profile?.birthDate || "");
+    setResult(stored.result);
+    setSaved(Boolean(stored.saved));
+    setCookieOpen(stored.category === "cookie");
+    sessionStorage.removeItem("fortune-result");
+  }, []);
+
   const generate = async (category: Tab) => {
     setLoading(true);
     setError("");
     setResult(null);
     setSaved(false);
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json"
-      };
-      if (supabaseKey) {
-        headers.apikey = supabaseKey;
-        headers.Authorization = `Bearer ${supabaseKey}`;
+      const session = await requireLogin();
+      if (!session) {
+        setError("로그인 후 결제하고 운세를 볼 수 있습니다.");
+        setLoading(false);
+        return;
       }
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
-      if (accessToken) {
-        headers.Authorization = `Bearer ${accessToken}`;
-      }
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/fortune-generate`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
+      startPendingPayment({
+        kind: "fortune",
+        orderName: category === "cookie" ? "월연당 포춘쿠키 운세" : category === "animal" ? "월연당 띠별 운세" : "월연당 별자리 운세",
+        amount: READING_PRICE,
+        payload: {
           category,
           profile: {
             name,
             birthDate,
             animal: category === "animal" ? animal : undefined,
             starSign: category === "star" ? star : undefined
-          }
-        })
+          },
+        },
       });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "운세 생성에 실패했습니다.");
-      }
-      setResult(data.result);
-      setSaved(Boolean(data.saved));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "운세 생성에 실패했습니다.");
+      setError(err instanceof Error ? err.message : "결제를 시작하지 못했습니다.");
     } finally {
       setLoading(false);
     }
@@ -149,7 +148,7 @@ export default function TodayPage() {
           {birthDate && tab === "animal" && <p className="computed-sign">계산된 띠: <b>{animal}띠</b></p>}
           {birthDate && tab === "star" && <p className="computed-sign">계산된 별자리: <b>{star}</b></p>}
           <button className="primary-button" type="button" disabled={!birthDate || loading} onClick={() => generate(tab)}>
-            {loading ? "생성 중..." : "오늘 운세 생성"}
+            {loading ? "결제 준비 중..." : "결제하고 오늘 운세 보기"}
           </button>
         </section>
       )}

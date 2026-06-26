@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { ensureProfile, supabase } from "../../lib/supabase-client";
+import { authHeaders, supabaseUrl } from "../../lib/payment";
 
 type Profile = {
   id: string;
@@ -36,6 +37,16 @@ type FortuneArchive = {
   created_at: string;
 };
 
+type PaymentRecord = {
+  id: string;
+  order_name: string;
+  product_kind: string;
+  amount: number;
+  status: string;
+  created_at: string;
+  canceled_at: string | null;
+};
+
 function formatDate(value?: string | null) {
   if (!value) return "-";
 
@@ -60,6 +71,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [tarotArchive, setTarotArchive] = useState<TarotArchive[]>([]);
   const [fortuneArchive, setFortuneArchive] = useState<FortuneArchive[]>([]);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [paymentMessage, setPaymentMessage] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -99,7 +112,7 @@ export default function ProfilePage() {
         }
       }
 
-      const [tarotResult, fortuneResult] = await Promise.all([
+      const [tarotResult, fortuneResult, paymentResult] = await Promise.all([
         supabase
           .from("tarot_readings")
           .select("id,reading_type,result,created_at")
@@ -110,12 +123,18 @@ export default function ProfilePage() {
           .select("id,category,result,created_at")
           .order("created_at", { ascending: false })
           .limit(10),
+        supabase
+          .from("payments")
+          .select("id,order_name,product_kind,amount,status,created_at,canceled_at")
+          .order("created_at", { ascending: false })
+          .limit(20),
       ]);
 
       if (!mounted) return;
 
       setTarotArchive((tarotResult.data || []) as TarotArchive[]);
       setFortuneArchive((fortuneResult.data || []) as FortuneArchive[]);
+      setPayments((paymentResult.data || []) as PaymentRecord[]);
       setLoading(false);
     }
 
@@ -130,6 +149,25 @@ export default function ProfilePage() {
     await supabase.auth.signOut();
     router.push("/");
     router.refresh();
+  };
+
+  const cancelPayment = async (paymentId: string) => {
+    setPaymentMessage("");
+    const headers = await authHeaders();
+    const response = await fetch(`${supabaseUrl}/functions/v1/payment-cancel`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ paymentId, cancelReason: "사용자 환불 요청" }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      setPaymentMessage(data.error || "환불 요청에 실패했습니다.");
+      return;
+    }
+
+    setPayments((current) => current.map((payment) => payment.id === paymentId ? data.payment : payment));
+    setPaymentMessage("환불 처리가 완료되었습니다.");
   };
 
   return (
@@ -202,6 +240,35 @@ export default function ProfilePage() {
                 <h3>{item.result?.title || "오늘의 운세"}</h3>
                 <p>{item.result?.summary || "저장된 오늘의 운세입니다."}</p>
                 <small>{formatDate(item.created_at)}</small>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="archive-section">
+        <div className="section-title-row">
+          <h2>결제내역</h2>
+        </div>
+        {paymentMessage && <p className="auth-message">{paymentMessage}</p>}
+        {payments.length === 0 ? (
+          <div className="empty-panel">
+            <strong>결제내역이 없습니다.</strong>
+            <p>결제 후 리딩 결과를 보면 이곳에 구매 정보가 표시됩니다.</p>
+          </div>
+        ) : (
+          <div className="archive-list">
+            {payments.map((payment) => (
+              <article className="archive-item payment-item" key={payment.id}>
+                <span>{payment.product_kind === "tarot" ? "타로" : payment.product_kind === "fortune" ? "운세" : "사주"}</span>
+                <h3>{payment.order_name}</h3>
+                <p>{payment.amount.toLocaleString("ko-KR")}원 · {payment.status}</p>
+                <small>{formatDate(payment.created_at)}</small>
+                {payment.status !== "CANCELED" && payment.status !== "PARTIAL_CANCELED" && (
+                  <button className="primary-button secondary" type="button" onClick={() => cancelPayment(payment.id)}>
+                    환불 요청
+                  </button>
+                )}
               </article>
             ))}
           </div>

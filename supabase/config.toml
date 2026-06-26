@@ -17,3 +17,15 @@ verify_jwt = false
 
 [functions.storage-test-image-record]
 verify_jwt = false
+
+[functions.payment-config]
+verify_jwt = false
+
+[functions.payment-confirm]
+verify_jwt = false
+
+[functions.payment-cancel]
+verify_jwt = false
+
+[functions.admin-dashboard]
+verify_jwt = false

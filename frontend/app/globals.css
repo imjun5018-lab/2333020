@@ -1326,3 +1326,93 @@ select {
   font-size: 12px;
   font-weight: 900;
 }
+
+.payment-summary,
+.search-panel,
+.search-results,
+.admin-list {
+  display: grid;
+  gap: 12px;
+  padding: 0 18px 24px;
+}
+
+.payment-summary {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #202020;
+  margin: 0 18px 18px;
+  padding: 18px;
+}
+
+.payment-summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+
+.payment-summary b {
+  color: var(--orange);
+}
+
+.search-page,
+.admin-page {
+  padding-bottom: 34px;
+}
+
+.search-panel input {
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #151515;
+  color: #fff;
+  padding: 0 14px;
+}
+
+.search-item {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #202020;
+  padding: 12px;
+}
+
+.search-item > div {
+  position: relative;
+  height: 92px;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.search-item img {
+  object-fit: cover;
+}
+
+.search-item span,
+.search-item small {
+  display: block;
+}
+
+.search-item strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.search-item small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.payment-item button {
+  margin-top: 14px;
+}
+
+.admin-tabs {
+  grid-template-columns: repeat(4, 1fr);
+}
