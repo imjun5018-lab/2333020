@@ -893,6 +893,10 @@ select {
   padding: 20px 18px 0;
 }
 
+.compact-actions {
+  padding: 18px 0 0;
+}
+
 .primary-button.secondary {
   background: #333;
 }
@@ -1200,4 +1204,125 @@ select {
   display: grid;
   gap: 10px;
   padding: 0 18px;
+}
+
+.review-grid,
+.archive-list {
+  display: grid;
+  gap: 12px;
+}
+
+.review-card,
+.archive-item,
+.empty-panel,
+.review-panel {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #202020;
+  padding: 18px;
+}
+
+.review-card div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.review-card span,
+.archive-item span {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(255, 90, 42, 0.14);
+  padding: 6px 10px;
+  color: var(--orange);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.review-card b {
+  color: #ffd18c;
+  letter-spacing: 0;
+}
+
+.review-card p,
+.archive-item p,
+.empty-panel p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.review-card strong {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.empty-panel strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.review-panel {
+  display: grid;
+  gap: 12px;
+  margin: 20px 18px 0;
+}
+
+.review-panel h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.rating-row {
+  display: flex;
+  gap: 6px;
+}
+
+.rating-row button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #171717;
+  color: #6e6762;
+  font-size: 18px;
+}
+
+.rating-row button.active {
+  border-color: rgba(255, 90, 42, 0.7);
+  color: #ffd18c;
+}
+
+.review-panel textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #151515;
+  color: #fff;
+  padding: 12px;
+  line-height: 1.5;
+}
+
+.archive-section {
+  padding: 28px 18px 34px;
+}
+
+.archive-item h3 {
+  margin: 12px 0 8px;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.archive-item small {
+  display: block;
+  margin-top: 12px;
+  color: var(--orange);
+  font-size: 12px;
+  font-weight: 900;
 }

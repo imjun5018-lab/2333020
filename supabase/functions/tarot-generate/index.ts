@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
     let saved = false;
     let record = null;
 
-    if (user?.id && isPaidUser === true) {
+    if (user?.id && isPaidUser !== false) {
       const supabaseAdmin = createAdminClient();
       if (supabaseAdmin) {
         const { data: savedRecord, error } = await supabaseAdmin
@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
       result,
       saved,
       record,
-      savePolicy: "Only logged-in paid users are saved to Supabase.",
+      savePolicy: "Logged-in users are saved to Supabase.",
     });
   } catch (error) {
     return json(req, { error: "Internal server error", detail: String(error) }, 500);

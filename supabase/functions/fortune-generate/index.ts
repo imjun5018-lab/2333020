@@ -1,3 +1,5 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+
 function corsHeaders(req: Request) {
   return {
     "Access-Control-Allow-Origin": getAllowedOrigin(req),
@@ -80,24 +82,99 @@ Deno.serve(async (req) => {
       )?.text ||
       "";
 
+    let result;
     try {
-      return json(req, { result: JSON.parse(outputText), model: openaiModel });
+      result = JSON.parse(outputText);
     } catch {
-      return json(req, {
-        result: {
-          title: "오늘의 운세",
-          summary: outputText,
-          lucky: "차분한 선택",
-          caution: "서두른 판단",
-          action: "오늘 할 수 있는 작은 일 하나를 정하세요.",
-        },
-        model: openaiModel,
-      });
+      result = {
+        title: "오늘의 운세",
+        summary: outputText,
+        lucky: "차분한 선택",
+        caution: "서두른 판단",
+        action: "오늘 할 수 있는 작은 일 하나를 정하세요.",
+      };
     }
+
+    const user = await getUser(req);
+    let saved = false;
+    let record = null;
+
+    if (user?.id) {
+      const supabaseAdmin = createAdminClient();
+      if (supabaseAdmin) {
+        const { data: savedRecord, error } = await supabaseAdmin
+          .from("fortune_readings")
+          .insert({
+            user_id: user.id,
+            category,
+            profile: profile || {},
+            result,
+            model: openaiModel,
+          })
+          .select()
+          .single();
+
+        if (!error) {
+          saved = true;
+          record = savedRecord;
+        }
+      }
+    }
+
+    return json(req, { result, model: openaiModel, saved, record });
   } catch (error) {
     return json(req, { error: "Internal server error", detail: String(error) }, 500);
   }
 });
+
+async function getUser(req: Request) {
+  const authHeader = req.headers.get("Authorization");
+  const token = authHeader?.replace("Bearer ", "");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = getPublishableKey();
+
+  if (!token || !supabaseUrl || !anonKey) {
+    return null;
+  }
+
+  const supabase = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data, error } = await supabase.auth.getUser();
+  return error ? null : data.user;
+}
+
+function createAdminClient() {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || getSecretKey();
+
+  if (!supabaseUrl || !serviceKey) {
+    return null;
+  }
+
+  return createClient(supabaseUrl, serviceKey);
+}
+
+function getPublishableKey() {
+  const legacyAnon = Deno.env.get("SUPABASE_ANON_KEY");
+  if (legacyAnon) return legacyAnon;
+
+  try {
+    const keys = JSON.parse(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS") || "{}");
+    return keys.default || null;
+  } catch {
+    return null;
+  }
+}
+
+function getSecretKey() {
+  try {
+    const keys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}");
+    return keys.default || null;
+  } catch {
+    return null;
+  }
+}
 
 function json(req: Request, data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {

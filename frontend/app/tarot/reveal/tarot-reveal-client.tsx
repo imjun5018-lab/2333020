@@ -54,7 +54,13 @@ export default function TarotRevealClient() {
         throw new Error(data.error || "결과 생성에 실패했습니다.");
       }
 
-      sessionStorage.setItem("tarot-result", JSON.stringify({ type, cards, result: data.result, saved: data.saved }));
+      sessionStorage.setItem("tarot-result", JSON.stringify({
+        type,
+        cards,
+        result: data.result,
+        saved: data.saved,
+        record: data.record || null
+      }));
       router.push("/tarot/result");
     } catch (err) {
       setError(err instanceof Error ? err.message : "결과 생성에 실패했습니다.");
@@ -65,9 +71,6 @@ export default function TarotRevealClient() {
 
   return (
     <main className="mobile-shell result-page">
-      <header className="app-header">
-        <Link className="app-logo" href="/">월연당</Link>
-      </header>
       <nav className="top-tabs" aria-label="주요 메뉴">
         <Link href="/saju">정통사주</Link>
         <Link href="/tarot" className="active">타로</Link>

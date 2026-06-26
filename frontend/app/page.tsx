@@ -33,8 +33,24 @@ const sections = [
   }
 ];
 
+type Review = {
+  id: string;
+  reading_kind: string;
+  rating: number;
+  content: string;
+  display_name: string;
+  created_at: string;
+};
+
+function reviewKindLabel(kind: string) {
+  if (kind === "tarot") return "타로";
+  if (kind === "fortune") return "오늘운세";
+  return "사주";
+}
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -43,6 +59,15 @@ export default function Home() {
     });
 
     return () => listener.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    supabase
+      .from("reading_reviews")
+      .select("id,reading_kind,rating,content,display_name,created_at")
+      .order("created_at", { ascending: false })
+      .limit(6)
+      .then(({ data }) => setReviews((data || []) as Review[]));
   }, []);
 
   return (
@@ -103,6 +128,31 @@ export default function Home() {
           </div>
         </section>
       ))}
+
+      <section className="content-section">
+        <div className="section-title-row">
+          <h2>최근 리뷰</h2>
+        </div>
+        {reviews.length > 0 ? (
+          <div className="review-grid">
+            {reviews.map((review) => (
+              <article className="review-card" key={review.id}>
+                <div>
+                  <span>{reviewKindLabel(review.reading_kind)}</span>
+                  <b>{"★".repeat(review.rating)}</b>
+                </div>
+                <p>{review.content}</p>
+                <strong>{review.display_name}</strong>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-panel">
+            <strong>아직 등록된 리뷰가 없습니다.</strong>
+            <p>로그인 후 리딩 결과 화면에서 첫 리뷰를 남겨보세요.</p>
+          </div>
+        )}
+      </section>
 
       <section className="guide-panel">
         <p className="accent-label">오늘 시작하기</p>

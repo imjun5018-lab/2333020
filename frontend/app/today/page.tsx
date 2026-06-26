@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { supabase } from "../../lib/supabase-client";
 
 type Tab = "cookie" | "animal" | "star";
 
@@ -47,6 +48,7 @@ export default function TodayPage() {
   const [cookieOpen, setCookieOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
   const animal = useMemo(() => birthDate ? getAnimal(Number(birthDate.slice(0, 4))) : "", [birthDate]);
@@ -56,6 +58,7 @@ export default function TodayPage() {
     setLoading(true);
     setError("");
     setResult(null);
+    setSaved(false);
     try {
       const headers: Record<string, string> = {
         "Content-Type": "application/json"
@@ -63,6 +66,12 @@ export default function TodayPage() {
       if (supabaseKey) {
         headers.apikey = supabaseKey;
         headers.Authorization = `Bearer ${supabaseKey}`;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
       }
 
       const response = await fetch(`${supabaseUrl}/functions/v1/fortune-generate`, {
@@ -83,6 +92,7 @@ export default function TodayPage() {
         throw new Error(data.error || "운세 생성에 실패했습니다.");
       }
       setResult(data.result);
+      setSaved(Boolean(data.saved));
     } catch (err) {
       setError(err instanceof Error ? err.message : "운세 생성에 실패했습니다.");
     } finally {
@@ -92,9 +102,6 @@ export default function TodayPage() {
 
   return (
     <main className="mobile-shell today-page">
-      <header className="app-header">
-        <Link className="app-logo" href="/">월연당</Link>
-      </header>
       <nav className="top-tabs" aria-label="주요 메뉴">
         <Link href="/saju">정통사주</Link>
         <Link href="/tarot">타로</Link>
@@ -157,6 +164,11 @@ export default function TodayPage() {
             <div><b>행운</b><span>{result.lucky}</span></div>
             <div><b>주의</b><span>{result.caution}</span></div>
             <div><b>실행</b><span>{result.action}</span></div>
+          </div>
+          <div className="result-actions compact-actions">
+            <Link className="primary-button secondary" href={saved ? "/profile" : "/login"}>
+              {saved ? "내 보관함에서 보기" : "로그인하고 보관하기"}
+            </Link>
           </div>
         </section>
       )}
